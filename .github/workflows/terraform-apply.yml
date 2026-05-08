@@ -1,0 +1,79 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+      layer:
+        description: "Terraform layer to apply"
+        required: true
+        type: choice
+        options:
+          - 00_rg
+          - 01_networking
+          - 03_vm
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ARM_USE_OIDC: "true"
+  ARM_USE_AZUREAD: "true"
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify Azure Login
+        run: az account show
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init
+        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Output
+        if: always()
+        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        run: terraform output -no-color || true
+
+      - name: Logout
+        if: always()
+        run: az logout
