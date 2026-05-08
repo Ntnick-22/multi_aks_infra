@@ -1,30 +1,53 @@
+locals {
+  os_images = {
+    "ubuntu-24.04" = {
+      publisher = "Canonical"
+      offer     = "ubuntu-24_04-lts"
+      sku       = "server"
+    }
+    "ubuntu-22.04" = {
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-jammy"
+      sku       = "22_04-lts"
+    }
+  }
+
+  selected_image = local.os_images[var.os_image]
+
+  ssh_rule = [{
+    name     = "AllowSSH"
+    priority = 100
+    port     = "22"
+    protocol = "Tcp"
+    source   = var.ssh_source_address
+  }]
+
+  all_inbound_rules = concat(local.ssh_rule, var.additional_inbound_rules)
+
+  default_tags = {
+    managed_by = "terraform"
+    module     = "azure_vm"
+  }
+  all_tags = merge(local.default_tags, var.tags)
+}
+
 resource "azurerm_public_ip" "pip" {
   name                = "pip-${var.name}"
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
   sku                 = "Standard"
+  tags                = local.all_tags
 }
 
 resource "azurerm_network_security_group" "nsg" {
   name                = "nsg-${var.name}"
   location            = var.location
   resource_group_name = var.resource_group_name
-
-  security_rule {
-    name                       = "AllowSSH"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
+  tags                = local.all_tags
 
   dynamic "security_rule" {
-    for_each = var.additional_inbound_rules
+    for_each = local.all_inbound_rules
     content {
       name                       = security_rule.value.name
       priority                   = security_rule.value.priority
@@ -43,7 +66,7 @@ resource "azurerm_network_interface" "nic" {
   name                  = "nic-${var.name}"
   location              = var.location
   resource_group_name   = var.resource_group_name
-  ip_forwarding_enabled = true
+  ip_forwarding_enabled = var.ip_forwarding_enabled
 
   ip_configuration {
     name                          = "internal"
@@ -65,6 +88,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   size                  = var.size
   admin_username        = var.admin_username
   network_interface_ids = [azurerm_network_interface.nic.id]
+  tags                  = local.all_tags
 
   admin_ssh_key {
     username   = var.admin_username
@@ -77,9 +101,9 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "ubuntu-24_04-lts"
-    sku       = "server"
+    publisher = local.selected_image.publisher
+    offer     = local.selected_image.offer
+    sku       = local.selected_image.sku
     version   = "latest"
   }
 }

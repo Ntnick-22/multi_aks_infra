@@ -1,8 +1,8 @@
 data "terraform_remote_state" "rg" {
   backend = "azurerm"
   config = {
-    resource_group_name  = "sai-rg"
-    storage_account_name = "saitfstate123"
+    resource_group_name  = "multi-env-infra-sg"
+    storage_account_name = "meitfstate123"
     container_name       = "tfstate"
     key                  = "dev/00_rg/terraform.tfstate"
   }
@@ -11,8 +11,8 @@ data "terraform_remote_state" "rg" {
 data "terraform_remote_state" "network" {
   backend = "azurerm"
   config = {
-    resource_group_name  = "sai-rg"
-    storage_account_name = "saitfstate123"
+    resource_group_name  = "multi-env-infra-sg"
+    storage_account_name = "meitfstate123"
     container_name       = "tfstate"
     key                  = "dev/01_networking/terraform.tfstate"
   }
@@ -29,5 +29,7 @@ module "vm" {
   size                     = each.value.size
   admin_username           = each.value.admin_username
   admin_ssh_public_key     = file(pathexpand(each.value.admin_ssh_public_key))
+  ip_forwarding_enabled    = each.value.ip_forwarding_enabled
+  os_image                 = each.value.os_image
   additional_inbound_rules = each.value.additional_inbound_rules
 }

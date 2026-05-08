@@ -3,6 +3,6 @@ terraform {
     resource_group_name  = "multi-env-infra-sg"
     storage_account_name = "meitfstate123"
     container_name       = "tfstate"
-    key                  = "prod/03_vm/terraform.tfstate"
+    key                  = "dev/04_azure_sql/terraform.tfstate"
   }
 }

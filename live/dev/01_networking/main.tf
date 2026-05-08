@@ -1,13 +1,13 @@
-﻿data "terraform_remote_state" "rg" {
+data "terraform_remote_state" "rg" {
   backend = "azurerm"
   config = {
-    resource_group_name  = "sai-rg"
-    storage_account_name = "saitfstate123"
+    resource_group_name  = "multi-env-infra-sg"
+    storage_account_name = "meitfstate123"
     container_name       = "tfstate"
     key                  = "dev/00_rg/terraform.tfstate"
   }
-  
 }
+
 module "vnet" {
   source              = "../../../modules/azure_vnet"
   resource_group_name = data.terraform_remote_state.rg.outputs.resource_group_name
@@ -16,4 +16,3 @@ module "vnet" {
   address_space       = var.address_space
   subnets             = var.subnets
 }
-

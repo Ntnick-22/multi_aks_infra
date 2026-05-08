@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Devops_2026\\\\multi_aks_infra\\\\modules\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Devops_2026\\\\multi_aks_infra\\\\live\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName })",
+      "Bash(Get-ChildItem -Path \"C:\\\\Devops_2026\\\\multi_aks_infra\" -Recurse -Directory -Name)",
+      "Bash(Select-Object -First 30)",
+      "WebFetch(domain:registry.terraform.io)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
