@@ -12,7 +12,7 @@ postgres_servers = {
 sql_servers = {
   production_sql = {
     server_name = "prod-sql"
-    version     = "16.0"
+    version     = "12.0"
     sku_name    = "GP_Gen5_2"
   }
 }
@@ -25,8 +25,9 @@ sql_databases = {
 
 mongodb_clusters = {
   production_mongo = {
-    cluster_name       = "prod-mongo"
-    compute_tier       = "M20"
-    storage_size_in_gb = 512
+    cluster_name           = "prod-mongo"
+    compute_tier           = "M20"
+    storage_size_in_gb     = 512
+    high_availability_mode = "Disabled"
   }
 }

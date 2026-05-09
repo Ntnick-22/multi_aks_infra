@@ -38,9 +38,10 @@ variable "sql_databases" {
 
 variable "mongodb_clusters" {
   type = map(object({
-    cluster_name       = string
-    compute_tier       = string
-    storage_size_in_gb = number
+    cluster_name           = string
+    compute_tier           = string
+    storage_size_in_gb     = number
+    high_availability_mode = string
   }))
   default = {}
 }

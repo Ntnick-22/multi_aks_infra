@@ -59,6 +59,7 @@ resource "azurerm_mongo_cluster" "mongo" {
   location               = data.terraform_remote_state.rg.outputs.resource_group_location
   compute_tier           = each.value.compute_tier
   storage_size_in_gb     = each.value.storage_size_in_gb
+  high_availability_mode = each.value.high_availability_mode
   administrator_username = var.db_admin_username
   administrator_password = var.mongodb_cluster_passwords[each.key]
 }
