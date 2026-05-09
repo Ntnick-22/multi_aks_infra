@@ -27,8 +27,8 @@ module "vm" {
   location                 = data.terraform_remote_state.rg.outputs.resource_group_location
   subnet_id                = data.terraform_remote_state.network.outputs.subnet_ids[each.value.subnet_key]
   size                     = each.value.size
-  admin_username           = each.value.admin_username
-  admin_ssh_public_key     = file(pathexpand(each.value.admin_ssh_public_key))
+  admin_username           = var.admin_username
+  admin_ssh_public_key     = var.admin_ssh_public_key
   ip_forwarding_enabled    = each.value.ip_forwarding_enabled
   os_image                 = each.value.os_image
   additional_inbound_rules = each.value.additional_inbound_rules

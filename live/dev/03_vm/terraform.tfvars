@@ -1,9 +1,9 @@
-﻿vms = {
+﻿admin_username = "azureuser"
+
+vms = {
   "openvpn-server" = {
     size                  = "Standard_D2s_v3"
-    admin_username        = "azureuser"
     subnet_key            = "dev-sai-subnet"
-    admin_ssh_public_key  = "~/.ssh/sai_rsa.pub"
     ip_forwarding_enabled = true
     additional_inbound_rules = [
       {
@@ -17,10 +17,8 @@
   }
 
   "web-server" = {
-    size                 = "Standard_B2s"
-    admin_username       = "azureuser"
-    subnet_key           = "dev-sai-subnet"
-    admin_ssh_public_key = "~/.ssh/sai_rsa.pub"
+    size       = "Standard_B2s"
+    subnet_key = "dev-sai-subnet"
     additional_inbound_rules = [
       {
         name     = "AllowHTTP"

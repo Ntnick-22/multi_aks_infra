@@ -19,6 +19,7 @@ on:
           - 00_rg
           - 01_networking
           - 03_vm
+          - 04_databases
 
 permissions:
   id-token: write
@@ -52,6 +53,31 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
+
+      - name: Generate Azure VM SSH Keys
+        if: github.event.inputs.layer == '03_vm'
+        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        run: |
+          cat > secrets.auto.tfvars << 'EOF'
+          admin_ssh_public_key = "${{ secrets.VM_SSH_PUBLIC_KEY }}"
+          EOF
+
+      - name: Generate DB Secret tfvars
+        if: github.event.inputs.layer == '04_databases'
+        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        run: |
+          cat > secrets.auto.tfvars << 'EOF'
+          postgres_server_admin_passwords = {
+            "production_postgres" = "${{ secrets.POSTGRES_PRODUCTION_PASSWORD }}"
+          }
+          sql_server_admin_passwords = {
+            "production_sql" = "${{ secrets.SQL_PRODUCTION_PASSWORD }}"
+          }
+          mongodb_cluster_passwords = {
+            "production_mongo" = "${{ secrets.MONGO_PRODUCTION_PASSWORD }}"
+          }
+          EOF
+
 
       - name: Terraform Init
         working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
