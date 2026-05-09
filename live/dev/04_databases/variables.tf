@@ -43,6 +43,7 @@ variable "mongodb_clusters" {
     storage_size_in_gb     = number
     high_availability_mode = string
     shard_count            = number
+    version                = string
   }))
   default = {}
 }
