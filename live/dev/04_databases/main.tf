@@ -32,7 +32,7 @@ resource "azurerm_mssql_server" "sql_server" {
 
   name                         = each.value.server_name
   resource_group_name          = data.terraform_remote_state.rg.outputs.resource_group_name
-  location                     = data.terraform_remote_state.rg.outputs.resource_group_location
+  location                     = var.sql_server_location
   version                      = each.value.version
   administrator_login          = var.db_admin_username
   administrator_login_password = var.sql_server_admin_passwords[each.key]

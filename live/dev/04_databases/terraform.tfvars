@@ -2,7 +2,7 @@ db_admin_username = "dbadmin"
 
 postgres_servers = {
   production_postgres = {
-    server_name = "prod-postgres"
+    server_name = "dev-postgres-01"
     version     = "16"
     sku_name    = "B_Standard_B2s"
     storage_mb  = 131072
@@ -27,7 +27,7 @@ mongodb_clusters = {
   production_mongo = {
     cluster_name           = "prod-mongo"
     compute_tier           = "M20"
-    storage_size_in_gb     = 512
+    storage_size_in_gb     = 128
     high_availability_mode = "Disabled"
     shard_count            = 1
     version                = "7.0"
