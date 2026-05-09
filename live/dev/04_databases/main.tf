@@ -16,7 +16,7 @@ resource "azurerm_postgresql_flexible_server" "postgres" {
 
   name                   = each.value.server_name
   resource_group_name    = data.terraform_remote_state.rg.outputs.resource_group_name
-  location               = data.terraform_remote_state.rg.outputs.resource_group_location
+  location               = var.db_location
   version                = each.value.version
   sku_name               = each.value.sku_name
   storage_mb             = each.value.storage_mb
@@ -32,7 +32,7 @@ resource "azurerm_mssql_server" "sql_server" {
 
   name                         = each.value.server_name
   resource_group_name          = data.terraform_remote_state.rg.outputs.resource_group_name
-  location                     = var.sql_server_location
+  location                     = var.db_location
   version                      = each.value.version
   administrator_login          = var.db_admin_username
   administrator_login_password = var.sql_server_admin_passwords[each.key]
@@ -56,7 +56,7 @@ resource "azurerm_mongo_cluster" "mongo" {
 
   name                   = each.value.cluster_name
   resource_group_name    = data.terraform_remote_state.rg.outputs.resource_group_name
-  location               = data.terraform_remote_state.rg.outputs.resource_group_location
+  location               = var.db_location
   compute_tier           = each.value.compute_tier
   storage_size_in_gb     = each.value.storage_size_in_gb
   high_availability_mode = each.value.high_availability_mode

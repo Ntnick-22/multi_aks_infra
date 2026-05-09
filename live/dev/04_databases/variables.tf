@@ -59,7 +59,7 @@ variable "db_admin_username" {
   default = "dbadmin"
 }
 
-variable "sql_server_location" {
+variable "db_location" {
   type    = string
   default = "northeurope"
 }
