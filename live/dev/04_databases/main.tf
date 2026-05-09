@@ -60,6 +60,7 @@ resource "azurerm_mongo_cluster" "mongo" {
   compute_tier           = each.value.compute_tier
   storage_size_in_gb     = each.value.storage_size_in_gb
   high_availability_mode = each.value.high_availability_mode
+  shard_count            = each.value.shard_count
   administrator_username = var.db_admin_username
   administrator_password = var.mongodb_cluster_passwords[each.key]
 }

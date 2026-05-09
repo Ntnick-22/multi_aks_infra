@@ -29,5 +29,6 @@ mongodb_clusters = {
     compute_tier           = "M20"
     storage_size_in_gb     = 512
     high_availability_mode = "Disabled"
+    shard_count            = 1
   }
 }
