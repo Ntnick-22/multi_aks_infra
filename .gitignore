@@ -10,6 +10,13 @@ crash.*.log
 
 # Sensitive variable files
 *.auto.tfvars
+
+# IAM trust policy files (contain account IDs, never commit)
+trust-policy.json
+
+# Credentials files
+credentials.json
+credential.json
 override.tf
 override.tf.json
 
