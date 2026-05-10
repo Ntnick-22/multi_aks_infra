@@ -35,6 +35,6 @@
 
 | Name | Description |
 |------|-------------|
-| <a name="output_subnet_ids"></a> [subnet\_ids](#output\_subnet\_ids) | n/a |
-| <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id) | n/a |
+| <a name="output_subnet_ids"></a> [subnet\_ids](#output\_subnet\_ids) | Map of subnet names to their resource IDs |
+| <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id) | Resource ID of the provisioned virtual network |
 <!-- END_TF_DOCS -->
