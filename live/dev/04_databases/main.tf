@@ -8,9 +8,6 @@ data "terraform_remote_state" "rg" {
   }
 }
 
-# ============================================================
-# PostgreSQL Flexible Server
-# ============================================================
 resource "azurerm_postgresql_flexible_server" "postgres" {
   for_each = var.postgres_servers
 
@@ -24,9 +21,6 @@ resource "azurerm_postgresql_flexible_server" "postgres" {
   administrator_password = var.postgres_server_admin_passwords[each.key]
 }
 
-# ============================================================
-# MSSQL Server
-# ============================================================
 resource "azurerm_mssql_server" "sql_server" {
   for_each = var.sql_servers
 
@@ -38,9 +32,7 @@ resource "azurerm_mssql_server" "sql_server" {
   administrator_login_password = var.sql_server_admin_passwords[each.key]
 }
 
-# ============================================================
-# MSSQL Database
-# ============================================================
+
 resource "azurerm_mssql_database" "sql_database" {
   for_each = var.sql_databases
 
@@ -48,9 +40,7 @@ resource "azurerm_mssql_database" "sql_database" {
   server_id = azurerm_mssql_server.sql_server[each.key].id
 }
 
-# ============================================================
-# MongoDB Cluster
-# ============================================================
+
 resource "azurerm_mongo_cluster" "mongo" {
   for_each = var.mongodb_clusters
 

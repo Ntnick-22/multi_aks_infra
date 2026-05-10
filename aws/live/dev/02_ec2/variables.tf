@@ -3,11 +3,15 @@ variable "region" {
   default = "eu-west-1"
 }
 
+variable "ec2_ssh_public_key" {
+  type      = string
+  sensitive = true
+}
+
 variable "instances" {
   type = map(object({
     subnet_key           = string
     instance_type        = string
-    admin_ssh_public_key = string
     additional_inbound_rules = list(object({
       from_port   = number
       to_port     = number

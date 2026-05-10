@@ -23,7 +23,7 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 env:
   ARM_USE_OIDC: "true"
@@ -99,6 +99,15 @@ jobs:
         if: always()
         working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
         run: terraform output -no-color || true
+
+      - name: Update Terraform Docs
+        uses: terraform-docs/gh-actions@v1
+        with:
+          working-dir: live/${{ inputs.environment }}/${{ inputs.layer }}
+          output-file: README.md
+          output-method: replace
+          git-push: true
+          git-commit-message: "docs: auto-update terraform-docs for ${{ inputs.layer }}"
 
       - name: Logout
         if: always()

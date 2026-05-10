@@ -36,6 +36,14 @@ jobs:
         with:
           terraform_version: 1.6.6
 
+      - name: Inject EC2 SSH Key
+        if: inputs.layer == '02_ec2'
+        working-directory: aws/live/dev/02_ec2
+        run: |
+          cat > secrets.auto.tfvars << 'EOF'
+          ec2_ssh_public_key = "${{ secrets.EC2_SSH_PUBLIC_KEY }}"
+          EOF
+
       - name: Terraform Init
         working-directory: aws/live/dev/${{ inputs.layer }}
         run: terraform init -input=false

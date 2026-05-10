@@ -31,7 +31,7 @@ module "ec2" {
   subnet_id                = data.terraform_remote_state.network.outputs.subnet_ids[each.value.subnet_key]
   instance_type            = each.value.instance_type
   ami_id                   = data.aws_ami.ubuntu.id
-  admin_ssh_public_key     = file(pathexpand(each.value.admin_ssh_public_key))
+  admin_ssh_public_key     = var.ec2_ssh_public_key
   additional_inbound_rules = each.value.additional_inbound_rules
   tags                     = var.tags
 }

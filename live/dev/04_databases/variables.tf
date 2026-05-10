@@ -1,4 +1,5 @@
 variable "postgres_servers" {
+  description = "PostgreSQL Flexible Server configurations"
   type = map(object({
     server_name = string
     version     = string
@@ -9,12 +10,14 @@ variable "postgres_servers" {
 }
 
 variable "postgres_server_admin_passwords" {
+  description = "Admin passwords for PostgreSQL servers"
   type      = map(string)
   sensitive = true
   default   = {}
 }
 
 variable "sql_servers" {
+  description = "MSSQL Server configurations"
   type = map(object({
     server_name = string
     version     = string
@@ -24,12 +27,14 @@ variable "sql_servers" {
 }
 
 variable "sql_server_admin_passwords" {
+  description = "Admin passwords for MSSQL servers"
   type      = map(string)
   sensitive = true
   default   = {}
 }
 
 variable "sql_databases" {
+  description = "MSSQL database configurations"
   type = map(object({
     db_name = string
   }))
@@ -37,6 +42,7 @@ variable "sql_databases" {
 }
 
 variable "mongodb_clusters" {
+  description = "MongoDB cluster configurations"
   type = map(object({
     cluster_name           = string
     compute_tier           = string
@@ -49,17 +55,20 @@ variable "mongodb_clusters" {
 }
 
 variable "mongodb_cluster_passwords" {
+  description = "Admin passwords for MongoDB clusters"
   type      = map(string)
   sensitive = true
   default   = {}
 }
 
 variable "db_admin_username" {
+  description = "Administrator login username for all databases"
   type    = string
   default = "dbadmin"
 }
 
 variable "db_location" {
+  description = "Azure region for all database resources"
   type    = string
   default = "northeurope"
 }

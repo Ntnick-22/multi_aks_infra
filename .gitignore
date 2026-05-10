@@ -12,3 +12,6 @@ crash.*.log
 *.auto.tfvars
 override.tf
 override.tf.json
+
+# Claude Code local session files
+.claude/
