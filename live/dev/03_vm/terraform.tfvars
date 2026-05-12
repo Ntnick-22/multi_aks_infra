@@ -1,6 +1,7 @@
 ﻿admin_username = "azureuser"
 
 vms = {
+  /* --- Paused during Docker Swarm lab (public IP limit = 3) ---
   "openvpn-server" = {
     size                  = "Standard_D2s_v3"
     subnet_key            = "dev-sai-subnet"
@@ -36,6 +37,7 @@ vms = {
       }
     ]
   }
+  --- end pause --- */
 
   # --- Docker Swarm Lab Nodes ---
 
