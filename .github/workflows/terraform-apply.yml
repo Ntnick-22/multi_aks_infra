@@ -57,10 +57,10 @@ jobs:
       - name: Generate Azure VM SSH Keys
         if: github.event.inputs.layer == '03_vm'
         working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        env:
+          VM_SSH_PUBLIC_KEY: ${{ secrets.VM_SSH_PUBLIC_KEY }}
         run: |
-          cat > secrets.auto.tfvars << 'EOF'
-          admin_ssh_public_key = "${{ secrets.VM_SSH_PUBLIC_KEY }}"
-          EOF
+          printf 'admin_ssh_public_key = "%s"\n' "${VM_SSH_PUBLIC_KEY}" > secrets.auto.tfvars
 
       - name: Generate DB Secret tfvars
         if: github.event.inputs.layer == '04_databases'
