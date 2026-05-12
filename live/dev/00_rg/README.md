@@ -31,6 +31,6 @@ No resources.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_resource_group_location"></a> [resource\_group\_location](#output\_resource\_group\_location) | n/a |
-| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
+| <a name="output_resource_group_location"></a> [resource\_group\_location](#output\_resource\_group\_location) | Azure region where the resource group is deployed |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | Name of the provisioned Azure resource group |
 <!-- END_TF_DOCS -->
