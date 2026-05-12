@@ -1,5 +1,5 @@
 ﻿rg_name  = "dev-infra-rg"
-location = "westeurope"
+location = "northeurope"
 
 tags = {
   environment = "dev"
