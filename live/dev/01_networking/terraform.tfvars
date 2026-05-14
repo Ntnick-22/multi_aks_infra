@@ -1,8 +1,8 @@
-﻿vnet_name     = "dev-sai-vnet"
+﻿vnet_name     = "dev-mei-vnet"
 address_space = ["10.0.0.0/16"]
 
 subnets = {
-  "dev-sai-subnet" = {
+  "dev-mei-subnet" = {
     address_prefixes = ["10.0.1.0/24"]
   }
 }
