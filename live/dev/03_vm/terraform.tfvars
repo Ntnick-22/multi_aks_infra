@@ -1,4 +1,4 @@
-﻿admin_username = "azureuser"
+admin_username = "azureuser"
 
 vms = {
    
@@ -18,7 +18,7 @@ vms = {
   }
 
   "web-server" = {
-    size       = "Standard_B2s"
+    size       = "Standard_D2s_v3"
     subnet_key = "dev-sai-subnet"
     additional_inbound_rules = [
       {
