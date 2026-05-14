@@ -79,7 +79,7 @@ jobs:
 
   apply-networking:
     needs: apply-rg
-    if: contains(fromJSON('["01_networking","03_vm","04_databases"]'), inputs.target_layer)
+    if: success() && contains(fromJSON('["01_networking","03_vm","04_databases"]'), inputs.target_layer)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -125,7 +125,7 @@ jobs:
 
   apply-vm:
     needs: apply-networking
-    if: contains(fromJSON('["03_vm","04_databases"]'), inputs.target_layer)
+    if: success() && contains(fromJSON('["03_vm","04_databases"]'), inputs.target_layer)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -177,7 +177,7 @@ jobs:
 
   apply-databases:
     needs: apply-vm
-    if: inputs.target_layer == '04_databases'
+    if: success() && inputs.target_layer == '04_databases'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

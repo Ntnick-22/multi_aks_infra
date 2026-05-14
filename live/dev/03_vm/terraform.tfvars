@@ -4,7 +4,7 @@ vms = {
    
   "openvpn-server" = {
     size                  = "Standard_D2s_v3"
-    subnet_key            = "dev-sai-subnet"
+    subnet_key            = "dev-mei-subnet"
     ip_forwarding_enabled = true
     additional_inbound_rules = [
       {
@@ -19,7 +19,7 @@ vms = {
 
   "web-server" = {
     size       = "Standard_D2s_v3"
-    subnet_key = "dev-sai-subnet"
+    subnet_key = "dev-mei-subnet"
     additional_inbound_rules = [
       {
         name     = "AllowHTTP"
