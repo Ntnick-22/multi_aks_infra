@@ -11,6 +11,15 @@ on:
           - dev
           - uat
           - prod
+      target_layer:
+        description: "Apply up to and including this layer"
+        required: true
+        type: choice
+        options:
+          - 04_databases
+          - 03_vm
+          - 01_networking
+          - 00_rg
 
 permissions:
   id-token: write
@@ -66,21 +75,13 @@ jobs:
         working-directory: live/${{ inputs.environment }}/00_rg
         run: terraform output -no-color || true
 
-      - name: Update Terraform Docs
-        uses: terraform-docs/gh-actions@v1
-        with:
-          working-dir: live/${{ inputs.environment }}/00_rg
-          output-file: README.md
-          output-method: replace
-          git-push: true
-          git-commit-message: "docs: auto-update terraform-docs for 00_rg"
-
       - name: Logout
         if: always()
         run: az logout
 
   apply-networking:
     needs: apply-rg
+    if: contains(fromJSON('["01_networking","03_vm","04_databases"]'), inputs.target_layer)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -122,21 +123,13 @@ jobs:
         working-directory: live/${{ inputs.environment }}/01_networking
         run: terraform output -no-color || true
 
-      - name: Update Terraform Docs
-        uses: terraform-docs/gh-actions@v1
-        with:
-          working-dir: live/${{ inputs.environment }}/01_networking
-          output-file: README.md
-          output-method: replace
-          git-push: true
-          git-commit-message: "docs: auto-update terraform-docs for 01_networking"
-
       - name: Logout
         if: always()
         run: az logout
 
   apply-vm:
     needs: apply-networking
+    if: contains(fromJSON('["03_vm","04_databases"]'), inputs.target_layer)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -184,21 +177,13 @@ jobs:
         working-directory: live/${{ inputs.environment }}/03_vm
         run: terraform output -no-color || true
 
-      - name: Update Terraform Docs
-        uses: terraform-docs/gh-actions@v1
-        with:
-          working-dir: live/${{ inputs.environment }}/03_vm
-          output-file: README.md
-          output-method: replace
-          git-push: true
-          git-commit-message: "docs: auto-update terraform-docs for 03_vm"
-
       - name: Logout
         if: always()
         run: az logout
 
   apply-databases:
     needs: apply-vm
+    if: inputs.target_layer == '04_databases'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -259,15 +244,35 @@ jobs:
         working-directory: live/${{ inputs.environment }}/04_databases
         run: terraform output -no-color || true
 
-      - name: Update Terraform Docs
-        uses: terraform-docs/gh-actions@v1
-        with:
-          working-dir: live/${{ inputs.environment }}/04_databases
-          output-file: README.md
-          output-method: replace
-          git-push: true
-          git-commit-message: "docs: auto-update terraform-docs for 04_databases"
-
       - name: Logout
         if: always()
         run: az logout
+
+  update-docs:
+    needs: apply-databases
+    if: always() && !failure() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set docs directories
+        id: dirs
+        run: |
+          BASE="live/${{ inputs.environment }}"
+          case "${{ inputs.target_layer }}" in
+            00_rg)         DIRS="$BASE/00_rg" ;;
+            01_networking) DIRS="$BASE/00_rg,$BASE/01_networking" ;;
+            03_vm)         DIRS="$BASE/00_rg,$BASE/01_networking,$BASE/03_vm" ;;
+            04_databases)  DIRS="$BASE/00_rg,$BASE/01_networking,$BASE/03_vm,$BASE/04_databases" ;;
+          esac
+          echo "dirs=${DIRS}" >> $GITHUB_OUTPUT
+
+      - name: Update Terraform Docs
+        uses: terraform-docs/gh-actions@v1
+        with:
+          working-dir: ${{ steps.dirs.outputs.dirs }}
+          output-file: README.md
+          output-method: replace
+          git-push: true
+          git-commit-message: "docs: auto-update terraform-docs up to ${{ inputs.target_layer }}"
