@@ -42,7 +42,7 @@ vms = {
   # --- Docker Swarm Lab Nodes ---
 
   "swarm-manager" = {
-    size       = "Standard_D2s_v3"
+    size       = "Standard_B1ms"
     subnet_key = "dev-sai-subnet"
     additional_inbound_rules = [
       {
@@ -84,7 +84,7 @@ vms = {
   }
 
   "swarm-worker-1" = {
-    size       = "Standard_D2s_v3"
+    size       = "Standard_B1ms"
     subnet_key = "dev-sai-subnet"
     additional_inbound_rules = [
       {
@@ -126,7 +126,7 @@ vms = {
   }
 
   "swarm-worker-2" = {
-    size       = "Standard_D2s_v3"
+    size       = "Standard_B1ms"
     subnet_key = "dev-sai-subnet"
     additional_inbound_rules = [
       {

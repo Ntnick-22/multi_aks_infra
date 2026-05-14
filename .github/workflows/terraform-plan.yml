@@ -1,0 +1,117 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  ARM_USE_OIDC: "true"
+  ARM_USE_AZUREAD: "true"
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        layer: [00_rg, 01_networking, 03_vm, 04_databases]
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Generate VM SSH tfvars
+        if: matrix.layer == '03_vm'
+        working-directory: live/dev/${{ matrix.layer }}
+        env:
+          VM_SSH_PUBLIC_KEY: ${{ secrets.VM_SSH_PUBLIC_KEY }}
+        run: printf 'admin_ssh_public_key = "%s"\n' "${VM_SSH_PUBLIC_KEY}" > secrets.auto.tfvars
+
+      - name: Generate DB Secret tfvars
+        if: matrix.layer == '04_databases'
+        working-directory: live/dev/${{ matrix.layer }}
+        run: |
+          cat > secrets.auto.tfvars << 'EOF'
+          postgres_server_admin_passwords = {
+            "production_postgres" = "${{ secrets.POSTGRES_PRODUCTION_PASSWORD }}"
+          }
+          sql_server_admin_passwords = {
+            "production_sql" = "${{ secrets.SQL_PRODUCTION_PASSWORD }}"
+          }
+          mongodb_cluster_passwords = {
+            "production_mongo" = "${{ secrets.MONGO_PRODUCTION_PASSWORD }}"
+          }
+          EOF
+
+      - name: Terraform Init
+        working-directory: live/dev/${{ matrix.layer }}
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        working-directory: live/dev/${{ matrix.layer }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: live/dev/${{ matrix.layer }}
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -no-color 2>&1 | tee plan_output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "exitcode=${EXIT_CODE}" >> $GITHUB_OUTPUT
+          if [ $EXIT_CODE -eq 1 ]; then
+            echo "❌ Plan failed for ${{ matrix.layer }}"
+            exit 1
+          fi
+          if [ $EXIT_CODE -eq 2 ]; then
+            echo "⚠️ Changes detected in ${{ matrix.layer }}"
+          fi
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ No changes in ${{ matrix.layer }}"
+          fi
+
+      - name: Post Plan Comment to PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs')
+            const plan = fs.readFileSync('live/dev/${{ matrix.layer }}/plan_output.txt', 'utf8')
+            const exitcode = '${{ steps.plan.outputs.exitcode }}'
+            const icons =  { '0': '✅', '1': '❌', '2': '⚠️' }
+            const labels = { '0': 'No changes', '1': 'Plan failed', '2': 'Changes detected' }
+            const icon  = icons[exitcode]  || '❓'
+            const label = labels[exitcode] || 'Unknown'
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `### ${icon} Terraform Plan: \`${{ matrix.layer }}\` — ${label}\n\n<details><summary>Show Plan Output</summary>\n\n\`\`\`terraform\n${plan.slice(0, 60000)}\n\`\`\`\n\n</details>`
+            })
+
+      - name: Logout
+        if: always()
+        run: az logout

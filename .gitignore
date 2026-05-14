@@ -23,3 +23,9 @@ override.tf.json
 
 # Claude Code local session files
 .claude/
+
+# Local-only files and folders
+practice/
+oicd.txt
+oidc-setup.sh
+*.auto.tfvars.example

@@ -11,15 +11,6 @@ on:
           - dev
           - uat
           - prod
-      layer:
-        description: "Terraform layer to apply"
-        required: true
-        type: choice
-        options:
-          - 00_rg
-          - 01_networking
-          - 03_vm
-          - 04_databases
 
 permissions:
   id-token: write
@@ -33,7 +24,7 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
-  terraform-apply:
+  apply-rg:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,25 +37,187 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Verify Azure Login
-        run: az account show
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init
+        working-directory: live/${{ inputs.environment }}/00_rg
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: live/${{ inputs.environment }}/00_rg
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -out=tfplan
+          EXIT_CODE=$?
+          echo "exitcode=${EXIT_CODE}" >> $GITHUB_OUTPUT
+          if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
+
+      - name: Terraform Apply
+        if: steps.plan.outputs.exitcode == '2'
+        working-directory: live/${{ inputs.environment }}/00_rg
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Output
+        if: always()
+        working-directory: live/${{ inputs.environment }}/00_rg
+        run: terraform output -no-color || true
+
+      - name: Update Terraform Docs
+        uses: terraform-docs/gh-actions@v1
+        with:
+          working-dir: live/${{ inputs.environment }}/00_rg
+          output-file: README.md
+          output-method: replace
+          git-push: true
+          git-commit-message: "docs: auto-update terraform-docs for 00_rg"
+
+      - name: Logout
+        if: always()
+        run: az logout
+
+  apply-networking:
+    needs: apply-rg
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
 
-      - name: Generate Azure VM SSH Keys
-        if: github.event.inputs.layer == '03_vm'
-        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+      - name: Terraform Init
+        working-directory: live/${{ inputs.environment }}/01_networking
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: live/${{ inputs.environment }}/01_networking
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -out=tfplan
+          EXIT_CODE=$?
+          echo "exitcode=${EXIT_CODE}" >> $GITHUB_OUTPUT
+          if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
+
+      - name: Terraform Apply
+        if: steps.plan.outputs.exitcode == '2'
+        working-directory: live/${{ inputs.environment }}/01_networking
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Output
+        if: always()
+        working-directory: live/${{ inputs.environment }}/01_networking
+        run: terraform output -no-color || true
+
+      - name: Update Terraform Docs
+        uses: terraform-docs/gh-actions@v1
+        with:
+          working-dir: live/${{ inputs.environment }}/01_networking
+          output-file: README.md
+          output-method: replace
+          git-push: true
+          git-commit-message: "docs: auto-update terraform-docs for 01_networking"
+
+      - name: Logout
+        if: always()
+        run: az logout
+
+  apply-vm:
+    needs: apply-networking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Generate VM SSH tfvars
+        working-directory: live/${{ inputs.environment }}/03_vm
         env:
           VM_SSH_PUBLIC_KEY: ${{ secrets.VM_SSH_PUBLIC_KEY }}
+        run: printf 'admin_ssh_public_key = "%s"\n' "${VM_SSH_PUBLIC_KEY}" > secrets.auto.tfvars
+
+      - name: Terraform Init
+        working-directory: live/${{ inputs.environment }}/03_vm
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: live/${{ inputs.environment }}/03_vm
         run: |
-          printf 'admin_ssh_public_key = "%s"\n' "${VM_SSH_PUBLIC_KEY}" > secrets.auto.tfvars
+          set +e
+          terraform plan -detailed-exitcode -out=tfplan
+          EXIT_CODE=$?
+          echo "exitcode=${EXIT_CODE}" >> $GITHUB_OUTPUT
+          if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
+
+      - name: Terraform Apply
+        if: steps.plan.outputs.exitcode == '2'
+        working-directory: live/${{ inputs.environment }}/03_vm
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Output
+        if: always()
+        working-directory: live/${{ inputs.environment }}/03_vm
+        run: terraform output -no-color || true
+
+      - name: Update Terraform Docs
+        uses: terraform-docs/gh-actions@v1
+        with:
+          working-dir: live/${{ inputs.environment }}/03_vm
+          output-file: README.md
+          output-method: replace
+          git-push: true
+          git-commit-message: "docs: auto-update terraform-docs for 03_vm"
+
+      - name: Logout
+        if: always()
+        run: az logout
+
+  apply-databases:
+    needs: apply-vm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
 
       - name: Generate DB Secret tfvars
-        if: github.event.inputs.layer == '04_databases'
-        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        working-directory: live/${{ inputs.environment }}/04_databases
         run: |
           cat > secrets.auto.tfvars << 'EOF'
           postgres_server_admin_passwords = {
@@ -78,36 +231,38 @@ jobs:
           }
           EOF
 
-
       - name: Terraform Init
-        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        working-directory: live/${{ inputs.environment }}/04_databases
         run: terraform init -input=false
 
-      - name: Terraform Validate
-        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
-        run: terraform validate
-
       - name: Terraform Plan
-        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
-        run: terraform plan -out=tfplan
+        id: plan
+        working-directory: live/${{ inputs.environment }}/04_databases
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -out=tfplan
+          EXIT_CODE=$?
+          echo "exitcode=${EXIT_CODE}" >> $GITHUB_OUTPUT
+          if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
 
       - name: Terraform Apply
-        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        if: steps.plan.outputs.exitcode == '2'
+        working-directory: live/${{ inputs.environment }}/04_databases
         run: terraform apply -auto-approve tfplan
 
       - name: Terraform Output
         if: always()
-        working-directory: live/${{ inputs.environment }}/${{ inputs.layer }}
+        working-directory: live/${{ inputs.environment }}/04_databases
         run: terraform output -no-color || true
 
       - name: Update Terraform Docs
         uses: terraform-docs/gh-actions@v1
         with:
-          working-dir: live/${{ inputs.environment }}/${{ inputs.layer }}
+          working-dir: live/${{ inputs.environment }}/04_databases
           output-file: README.md
           output-method: replace
           git-push: true
-          git-commit-message: "docs: auto-update terraform-docs for ${{ inputs.layer }}"
+          git-commit-message: "docs: auto-update terraform-docs for 04_databases"
 
       - name: Logout
         if: always()
