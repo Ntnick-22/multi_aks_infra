@@ -51,18 +51,22 @@ jobs:
       - name: Generate DB Secret tfvars
         if: matrix.layer == '04_databases'
         working-directory: live/dev/${{ matrix.layer }}
+        env:
+          POSTGRES_PASS: ${{ secrets.POSTGRES_PRODUCTION_PASSWORD }}
+          SQL_PASS: ${{ secrets.SQL_PRODUCTION_PASSWORD }}
+          MONGO_PASS: ${{ secrets.MONGO_PRODUCTION_PASSWORD }}
         run: |
-          cat > secrets.auto.tfvars << 'EOF'
-          postgres_server_admin_passwords = {
-            "production_postgres" = "${{ secrets.POSTGRES_PRODUCTION_PASSWORD }}"
-          }
-          sql_server_admin_passwords = {
-            "production_sql" = "${{ secrets.SQL_PRODUCTION_PASSWORD }}"
-          }
-          mongodb_cluster_passwords = {
-            "production_mongo" = "${{ secrets.MONGO_PRODUCTION_PASSWORD }}"
-          }
-          EOF
+          {
+            printf 'postgres_server_admin_passwords = {\n'
+            printf '  "production_postgres" = "%s"\n' "$(printf '%s' "$POSTGRES_PASS")"
+            printf '}\n'
+            printf 'sql_server_admin_passwords = {\n'
+            printf '  "production_sql" = "%s"\n' "$(printf '%s' "$SQL_PASS")"
+            printf '}\n'
+            printf 'mongodb_cluster_passwords = {\n'
+            printf '  "production_mongo" = "%s"\n' "$(printf '%s' "$MONGO_PASS")"
+            printf '}\n'
+          } > secrets.auto.tfvars
 
       - name: Terraform Init
         working-directory: live/dev/${{ matrix.layer }}
