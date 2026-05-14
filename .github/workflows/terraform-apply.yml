@@ -56,19 +56,15 @@ jobs:
         run: terraform init -input=false
 
       - name: Terraform Plan
-        id: plan
-        continue-on-error: true
         working-directory: live/${{ inputs.environment }}/00_rg
         run: |
           set +e
           terraform plan -detailed-exitcode -out=tfplan
           EXIT_CODE=$?
-          echo "exitcode=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
           if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
           exit 0
 
       - name: Terraform Apply
-        if: steps.plan.outputs.exitcode == '2'
         working-directory: live/${{ inputs.environment }}/00_rg
         run: terraform apply -auto-approve tfplan
 
@@ -106,19 +102,15 @@ jobs:
         run: terraform init -input=false
 
       - name: Terraform Plan
-        id: plan
-        continue-on-error: true
         working-directory: live/${{ inputs.environment }}/01_networking
         run: |
           set +e
           terraform plan -detailed-exitcode -out=tfplan
           EXIT_CODE=$?
-          echo "exitcode=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
           if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
           exit 0
 
       - name: Terraform Apply
-        if: steps.plan.outputs.exitcode == '2'
         working-directory: live/${{ inputs.environment }}/01_networking
         run: terraform apply -auto-approve tfplan
 
@@ -162,19 +154,15 @@ jobs:
         run: terraform init -input=false
 
       - name: Terraform Plan
-        id: plan
-        continue-on-error: true
         working-directory: live/${{ inputs.environment }}/03_vm
         run: |
           set +e
           terraform plan -detailed-exitcode -out=tfplan
           EXIT_CODE=$?
-          echo "exitcode=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
           if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
           exit 0
 
       - name: Terraform Apply
-        if: steps.plan.outputs.exitcode == '2'
         working-directory: live/${{ inputs.environment }}/03_vm
         run: terraform apply -auto-approve tfplan
 
@@ -231,19 +219,15 @@ jobs:
         run: terraform init -input=false
 
       - name: Terraform Plan
-        id: plan
-        continue-on-error: true
         working-directory: live/${{ inputs.environment }}/04_databases
         run: |
           set +e
           terraform plan -detailed-exitcode -out=tfplan
           EXIT_CODE=$?
-          echo "exitcode=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
           if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
           exit 0
 
       - name: Terraform Apply
-        if: steps.plan.outputs.exitcode == '2'
         working-directory: live/${{ inputs.environment }}/04_databases
         run: terraform apply -auto-approve tfplan
 
