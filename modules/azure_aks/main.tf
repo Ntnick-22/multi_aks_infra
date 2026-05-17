@@ -1,3 +1,5 @@
+data "azurerm_client_config" "current" {}
+
 resource "azurerm_kubernetes_cluster" "aks" {
   name                = var.cluster_name
   location            = var.location
@@ -22,7 +24,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   azure_active_directory_role_based_access_control {
-    tenant_id          = var.tenant_id
+    tenant_id          = data.azurerm_client_config.current.tenant_id
     azure_rbac_enabled = false
   }
 }
