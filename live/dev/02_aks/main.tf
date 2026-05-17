@@ -1,3 +1,5 @@
+data "azurerm_client_config" "current" {}
+
 data "terraform_remote_state" "rg" {
   backend = "azurerm"
   config = {
@@ -27,4 +29,5 @@ module "aks" {
   node_count          = var.node_count
   vm_size             = var.vm_size
   subnet_id           = data.terraform_remote_state.networking.outputs.subnet_ids["dev-aks-subnet"]
+  tenant_id           = data.azurerm_client_config.current.tenant_id
 }

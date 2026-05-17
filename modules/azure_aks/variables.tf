@@ -27,3 +27,4 @@ variable "vm_size" {
 variable "subnet_id" {
   type = string
 }
+
