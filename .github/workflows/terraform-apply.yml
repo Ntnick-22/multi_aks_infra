@@ -18,6 +18,7 @@ on:
         options:
           - 04_databases
           - 03_vm
+          - 02_aks
           - 01_networking
           - 00_rg
 
@@ -79,7 +80,7 @@ jobs:
 
   apply-networking:
     needs: apply-rg
-    if: success() && contains(fromJSON('["01_networking","03_vm","04_databases"]'), inputs.target_layer)
+    if: success() && contains(fromJSON('["01_networking","02_aks","03_vm","04_databases"]'), inputs.target_layer)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -123,8 +124,54 @@ jobs:
         if: always()
         run: az logout
 
-  apply-vm:
+  apply-aks:
     needs: apply-networking
+    if: success() && contains(fromJSON('["02_aks","03_vm","04_databases"]'), inputs.target_layer)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login via OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init
+        working-directory: live/${{ inputs.environment }}/02_aks
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        working-directory: live/${{ inputs.environment }}/02_aks
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -out=tfplan
+          EXIT_CODE=$?
+          if [ $EXIT_CODE -eq 1 ]; then exit 1; fi
+          exit 0
+
+      - name: Terraform Apply
+        working-directory: live/${{ inputs.environment }}/02_aks
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Output
+        if: always()
+        working-directory: live/${{ inputs.environment }}/02_aks
+        run: terraform output -no-color || true
+
+      - name: Logout
+        if: always()
+        run: az logout
+
+  apply-vm:
+    needs: apply-aks
     if: success() && contains(fromJSON('["03_vm","04_databases"]'), inputs.target_layer)
     runs-on: ubuntu-latest
     steps:
@@ -255,8 +302,9 @@ jobs:
           case "${{ inputs.target_layer }}" in
             00_rg)         DIRS="$BASE/00_rg" ;;
             01_networking) DIRS="$BASE/00_rg,$BASE/01_networking" ;;
-            03_vm)         DIRS="$BASE/00_rg,$BASE/01_networking,$BASE/03_vm" ;;
-            04_databases)  DIRS="$BASE/00_rg,$BASE/01_networking,$BASE/03_vm,$BASE/04_databases" ;;
+            02_aks)        DIRS="$BASE/00_rg,$BASE/01_networking,$BASE/02_aks" ;;
+            03_vm)         DIRS="$BASE/00_rg,$BASE/01_networking,$BASE/02_aks,$BASE/03_vm" ;;
+            04_databases)  DIRS="$BASE/00_rg,$BASE/01_networking,$BASE/02_aks,$BASE/03_vm,$BASE/04_databases" ;;
           esac
           echo "dirs=${DIRS}" >> $GITHUB_OUTPUT
 
