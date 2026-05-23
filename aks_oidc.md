@@ -153,7 +153,7 @@ az aks get-credentials \
 ```bash
 kubectl create clusterrolebinding github-gitops-cluster-admin \
   --clusterrole=cluster-admin \
-  --user=98843051-bf0f-4bf5-98e9-d52dda6916d9
+  --user=98843051-bf0f-4bf5-98e9-d52dda6916d9  (objectt id)uses internally to identify sp after entra id authenticates it 
 ```
 
 The user ID came from GitHub Actions error:

@@ -1,0 +1,12 @@
+  {
+    "Name": "AKS Read Only",
+    "Description": "Can only view AKS clusters",
+    "Actions": [
+      "Microsoft.ContainerService/managedClusters/read",
+      "Microsoft.ContainerService/managedClusters/listClusterUserCredential/action"
+    ],
+    "NotActions": [],
+    "AssignableScopes": [
+      "/subscriptions/df03e5ee-3b97-4f29-8a7b-0c1a55015171"
+    ]
+  }

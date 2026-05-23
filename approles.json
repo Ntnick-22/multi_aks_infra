@@ -1,0 +1,8 @@
+  [{
+    "allowedMemberTypes": ["User"],
+    "description": "Can read AKS resources",
+    "displayName": "AKS Reader",
+    "isEnabled": true,
+    "value": "aks.reader",
+    "id": "00000000-0000-0000-0000-000000000001"
+  }]
