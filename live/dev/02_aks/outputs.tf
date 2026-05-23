@@ -9,3 +9,7 @@ output "cluster_id" {
 output "resource_group_name" {
   value = module.aks.resource_group_name
 }
+
+output "kubelet_identity_object_id" {
+  value = module.aks.kubelet_identity_object_id
+}
